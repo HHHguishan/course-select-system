@@ -36,6 +36,7 @@ E:\claudecode_test\course-selection-backend\src\main\java\com\example\coursesele
 E:\claudecode_test\course-selection-backend\src\main\java\com\example\courseselection\common\exception\GlobalExceptionHandler.java
 E:\claudecode_test\course-selection-backend\src\main\java\com\example\courseselection\entity\CourseSelection.java
 E:\claudecode_test\course-selection-backend\src\main\java\com\example\courseselection\entity\Semester.java
+E:\claudecode_test\course-selection-backend\src\main\java\com\example\courseselection\config\DataInitializer.java
 E:\claudecode_test\course-selection-backend\src\main\java\com\example\courseselection\repository\StudentRepository.java
 E:\claudecode_test\course-selection-backend\src\main\java\com\example\courseselection\dto\response\CourseScheduleDTO.java
 E:\claudecode_test\course-selection-backend\src\main\java\com\example\courseselection\entity\enums\SelectionStatus.java

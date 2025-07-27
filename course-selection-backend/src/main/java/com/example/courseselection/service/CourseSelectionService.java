@@ -40,7 +40,7 @@ public class CourseSelectionService {
     private Integer defaultDropDays;
 
     @Transactional(readOnly = true)
-    public Page<CourseScheduleDTO> getAvailableCourses(Long studentId, Pageable pageable) {
+    public Page<CourseScheduleDTO> getAvailableCourses(Long studentId, Pageable pageable, String keyword) {
         // 获取当前学期
         Semester currentSemester = semesterRepository.findCurrentSemester()
                 .orElseThrow(() -> new BusinessException(ResultCode.NOT_FOUND, "当前学期未设置"));
@@ -49,6 +49,19 @@ public class CourseSelectionService {
         LocalDateTime now = LocalDateTime.now();
         List<CourseSchedule> availableSchedules = courseScheduleRepository
                 .findAvailableCoursesForSelection(currentSemester.getId(), now);
+
+        // 关键字搜索过滤
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String searchKeyword = keyword.trim().toLowerCase();
+            availableSchedules = availableSchedules.stream()
+                    .filter(schedule -> 
+                        schedule.getCourse().getCourseName().toLowerCase().contains(searchKeyword) ||
+                        schedule.getCourse().getCourseCode().toLowerCase().contains(searchKeyword) ||
+                        (schedule.getTeacher() != null && schedule.getTeacher().getUser() != null && 
+                         schedule.getTeacher().getUser().getRealName().toLowerCase().contains(searchKeyword))
+                    )
+                    .collect(Collectors.toList());
+        }
 
         // 获取学生已选课程
         List<CourseSelection> selectedCourses = courseSelectionRepository
@@ -80,9 +93,9 @@ public class CourseSelectionService {
     }
 
     @Transactional
-    public void selectCourse(Long studentId, Long courseScheduleId) {
+    public void selectCourse(Long userId, Long courseScheduleId) {
         // 获取学生信息
-        Student student = studentRepository.findById(studentId)
+        Student student = studentRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ResultCode.USER_NOT_FOUND, "学生不存在"));
 
         // 获取课程安排
@@ -94,7 +107,7 @@ public class CourseSelectionService {
 
         // 检查是否已选
         if (courseSelectionRepository.existsByStudentIdAndCourseScheduleIdAndStatus(
-                studentId, courseScheduleId, SelectionStatus.SELECTED)) {
+                student.getId(), courseScheduleId, SelectionStatus.SELECTED)) {
             throw new BusinessException(ResultCode.ALREADY_SELECTED);
         }
 
@@ -117,14 +130,18 @@ public class CourseSelectionService {
         courseSchedule.setCurrentStudents(currentCount.intValue() + 1);
         courseScheduleRepository.save(courseSchedule);
 
-        log.info("Student {} selected course schedule {}", studentId, courseScheduleId);
+        log.info("Student {} selected course schedule {}", student.getId(), courseScheduleId);
     }
 
     @Transactional
-    public void dropCourse(Long studentId, Long courseScheduleId) {
+    public void dropCourse(Long userId, Long courseScheduleId) {
+        // 获取学生信息
+        Student student = studentRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(ResultCode.USER_NOT_FOUND, "学生不存在"));
+        
         // 获取选课记录
         CourseSelection courseSelection = courseSelectionRepository
-                .findByStudentIdAndCourseScheduleId(studentId, courseScheduleId)
+                .findByStudentIdAndCourseScheduleId(student.getId(), courseScheduleId)
                 .orElseThrow(() -> new BusinessException(ResultCode.NOT_SELECTED, "未选择该课程"));
 
         if (courseSelection.getStatus() != SelectionStatus.SELECTED) {
@@ -151,13 +168,17 @@ public class CourseSelectionService {
             courseScheduleRepository.save(courseSchedule);
         }
 
-        log.info("Student {} dropped course schedule {}", studentId, courseScheduleId);
+        log.info("Student {} dropped course schedule {}", student.getId(), courseScheduleId);
     }
 
     @Transactional(readOnly = true)
-    public Page<CourseSelectionDTO> getMySelectedCourses(Long studentId, Pageable pageable) {
+    public Page<CourseSelectionDTO> getMySelectedCourses(Long userId, Pageable pageable) {
+        // 获取学生信息
+        Student student = studentRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(ResultCode.USER_NOT_FOUND, "学生不存在"));
+        
         Page<CourseSelection> selections = courseSelectionRepository
-                .findByStudentIdAndStatus(studentId, SelectionStatus.SELECTED, pageable);
+                .findByStudentIdAndStatus(student.getId(), SelectionStatus.SELECTED, pageable);
 
         return selections.map(this::convertToCourseSelectionDTO);
     }

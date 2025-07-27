@@ -1,0 +1,10 @@
+# Java 编译产物
+/target/
+/*.class
+
+# 日志文件
+*.log
+
+# Node.js 前端缓存
+node_modules/
+.vite/

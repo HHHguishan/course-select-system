@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(find:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(wmic process where:*)",
+      "Bash(mysql:*)",
+      "Bash(mvn:*)",
+      "Bash(powershell:*)"
     ],
     "deny": []
   }

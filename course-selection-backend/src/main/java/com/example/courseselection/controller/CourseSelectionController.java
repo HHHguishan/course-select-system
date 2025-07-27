@@ -30,14 +30,15 @@ public class CourseSelectionController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sort,
-            @RequestParam(defaultValue = "asc") String direction) {
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(required = false) String keyword) {
         
         Sort.Direction sortDirection = "desc".equalsIgnoreCase(direction) 
             ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
         
         Page<CourseScheduleDTO> courses = courseSelectionService.getAvailableCourses(
-            currentUser.getId(), pageable);
+            currentUser.getId(), pageable, keyword);
         
         return Result.success("获取可选课程成功", courses);
     }

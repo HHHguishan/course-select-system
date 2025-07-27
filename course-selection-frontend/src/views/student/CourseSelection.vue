@@ -37,22 +37,22 @@
       >
         <el-table-column label="课程代码" width="120">
           <template #default="scope">
-            {{ scope.row.course.courseCode }}
+            {{ scope.row.courseCode }}
           </template>
         </el-table-column>
         <el-table-column label="课程名称" min-width="200">
           <template #default="scope">
-            {{ scope.row.course.courseName }}
+            {{ scope.row.courseName }}
           </template>
         </el-table-column>
         <el-table-column label="授课教师" width="120">
           <template #default="scope">
-            {{ scope.row.teacher?.realName }}
+            {{ scope.row.teacherName }}
           </template>
         </el-table-column>
         <el-table-column label="学分" width="80">
           <template #default="scope">
-            {{ scope.row.course.credits }}
+            {{ scope.row.credits }}
           </template>
         </el-table-column>
         <el-table-column prop="classroom" label="教室" width="120" />
@@ -63,7 +63,7 @@
         </el-table-column>
         <el-table-column label="选课人数" width="100">
           <template #default="scope">
-            <span>{{ scope.row.currentStudentCount }}/{{ scope.row.maxStudents }}</span>
+            <span>{{ scope.row.currentStudents }}/{{ scope.row.maxStudents }}</span>
           </template>
         </el-table-column>
         <el-table-column label="状态" width="100">
@@ -168,7 +168,7 @@ const refreshCourses = () => {
 const selectCourse = async (courseSchedule: CourseSchedule) => {
   try {
     await ElMessageBox.confirm(
-      `确定要选择课程《${courseSchedule.course.courseName}》吗？`,
+      `确定要选择课程《${courseSchedule.courseName}》吗？`,
       '确认选课',
       {
         confirmButtonText: '确定',
@@ -178,7 +178,7 @@ const selectCourse = async (courseSchedule: CourseSchedule) => {
     )
     
     await courseApi.selectCourse({ courseScheduleId: courseSchedule.id })
-    ElMessage.success(`成功选择课程：${courseSchedule.course.courseName}`)
+    ElMessage.success(`成功选择课程：${courseSchedule.courseName}`)
     
     // 刷新数据
     loadCourses()
@@ -193,7 +193,7 @@ const selectCourse = async (courseSchedule: CourseSchedule) => {
 const dropCourse = async (courseSchedule: CourseSchedule) => {
   try {
     await ElMessageBox.confirm(
-      `确定要退选课程《${courseSchedule.course.courseName}》吗？`,
+      `确定要退选课程《${courseSchedule.courseName}》吗？`,
       '确认退课',
       {
         confirmButtonText: '确定',
@@ -203,7 +203,7 @@ const dropCourse = async (courseSchedule: CourseSchedule) => {
     )
     
     await courseApi.dropCourse(courseSchedule.id)
-    ElMessage.success(`成功退选课程：${courseSchedule.course.courseName}`)
+    ElMessage.success(`成功退选课程：${courseSchedule.courseName}`)
     
     // 刷新数据
     loadCourses()
@@ -228,20 +228,21 @@ const handleCurrentChange = (page: number) => {
 
 // 格式化上课时间
 const formatClassTime = (schedule: CourseSchedule) => {
-  if (!schedule.timeSlot) return '待安排'
+  if (!schedule.scheduleTime || schedule.scheduleTime.length === 0) return '待安排'
   
   const dayMap: Record<number, string> = {
     1: '周一', 2: '周二', 3: '周三', 4: '周四', 
     5: '周五', 6: '周六', 7: '周日'
   }
   
-  return `${dayMap[schedule.timeSlot.dayOfWeek]} ${schedule.timeSlot.startTime}-${schedule.timeSlot.endTime}`
+  const timeSlot = schedule.scheduleTime[0]
+  return `${dayMap[timeSlot.dayOfWeek]} ${timeSlot.startTime}-${timeSlot.endTime}`
 }
 
 // 判断课程是否可选
 const canSelectCourse = (schedule: CourseSchedule) => {
   return schedule.status === 'OPEN' && 
-         schedule.currentStudentCount < schedule.maxStudents &&
+         schedule.currentStudents < schedule.maxStudents &&
          !schedule.isSelected
 }
 
@@ -256,7 +257,7 @@ const getStatusTagType = (schedule: CourseSchedule) => {
 const getStatusText = (schedule: CourseSchedule) => {
   if (schedule.isSelected) return '已选'
   if (schedule.status !== 'OPEN') return '未开放'
-  if (schedule.currentStudentCount >= schedule.maxStudents) return '已满'
+  if (schedule.currentStudents >= schedule.maxStudents) return '已满'
   return '可选'
 }
 
